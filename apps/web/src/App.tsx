@@ -14,7 +14,8 @@ import { Today } from './pages/Today';
 import { useAuth } from './state/AuthContext';
 
 function RequireAuth({ children }: { children: ReactNode }) {
-  const { tutor } = useAuth();
+  const { tutor, isBootstrapping } = useAuth();
+  if (isBootstrapping) return null;
   if (!tutor) return <Navigate to="/login" replace />;
   return <AppShell>{children}</AppShell>;
 }

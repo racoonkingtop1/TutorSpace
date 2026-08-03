@@ -8,10 +8,25 @@ const TABS = [
   { to: '/settings', label: 'Настройки' },
 ];
 
+const DEMO_MODE = import.meta.env.VITE_DEMO_MODE === 'true';
+
 /** Mirrors the 380px phone-frame + bottom tab bar every authenticated screen in the prototype shares. */
 export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      {DEMO_MODE && (
+        <div
+          style={{
+            fontSize: 11.5,
+            textAlign: 'center',
+            padding: '6px 10px',
+            background: 'var(--accent-tint)',
+            color: 'var(--accent-text)',
+          }}
+        >
+          Демо-режим · данные условны и сбрасываются при перезагрузке страницы
+        </div>
+      )}
       <main style={{ flex: 1, maxWidth: 480, margin: '0 auto', width: '100%', padding: '0 0 72px' }}>
         {children}
       </main>

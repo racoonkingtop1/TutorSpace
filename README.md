@@ -1,4 +1,4 @@
-# Tutor Service
+# TutorSpace
 
 A tool for independent tutors to track students, schedule lessons, record
 payments/debt, publish a public booking card, and manage their own app
@@ -6,6 +6,15 @@ subscription. Scaffolded from a Claude Design prototype (`Prototype.dc.html`
 and its per-screen mockups) plus a hand-written DB schema doc; see
 [docs/db-schema-analysis.md](docs/db-schema-analysis.md) for how the two were
 reconciled.
+
+**Live demo:** https://racoonkingtop1.github.io/TutorSpace/ — runs entirely
+against a bundled 500-record dataset (no backend needed for the static
+build); see [docs/demo-mode.md](docs/demo-mode.md).
+
+Related docs: [docs/data-map.md](docs/data-map.md) (every entity, field, and
+where it's used) · [docs/db-schema-analysis.md](docs/db-schema-analysis.md)
+(design vs. schema gap analysis) · [docs/demo-mode.md](docs/demo-mode.md)
+(how the static demo build works).
 
 ## Stack
 
