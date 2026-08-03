@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-03T09:34:45.601Z",
+  "generatedAt": "2026-08-03T11:28:27.336Z",
   "anchorDate": "2026-08-03",
   "counts": {
     "tutors": 1,
@@ -7307,6 +7307,27 @@
     "createdAt": "2025-12-26T00:00:00.000Z",
     "updatedAt": "2026-07-22T00:00:00.000Z"
   },
+  "subscriptionPayments": [
+    {
+      "id": "subpay-000507-0000-4000-8000-000000000507",
+      "tutorSubscriptionId": "tsub-000502-0000-4000-8000-000000000502",
+      "amount": 1990,
+      "method": "card",
+      "status": "succeeded",
+      "promoCode": null,
+      "paidAt": "2026-07-22T00:00:00.000Z"
+    }
+  ],
+  "promoCodes": [
+    {
+      "id": "promo-000506-0000-4000-8000-000000000506",
+      "code": "FIRST10",
+      "discountPercent": 10,
+      "isActive": true,
+      "expiresAt": null,
+      "createdAt": "2024-09-01T08:00:00Z"
+    }
+  ],
   "reminderSettings": [
     {
       "id": "rem-000503-0000-4000-8000-000000000503",

@@ -73,6 +73,34 @@ export function studentDebtStatus(db, studentId) {
   return { studentId, balance, effectivePrice: price, unpaidCount, isBlocked };
 }
 
+export function reminderLabel(reminder) {
+  if (reminder.custom) {
+    const d = Math.floor(reminder.offsetMinutes / 1440);
+    const h = Math.floor((reminder.offsetMinutes % 1440) / 60);
+    const m = reminder.offsetMinutes % 60;
+    const parts = [];
+    if (d) parts.push(`${d} дн`);
+    if (h) parts.push(`${h} ч`);
+    if (m) parts.push(`${m} мин`);
+    return `${parts.join(' ') || '0 мин'} до занятия`;
+  }
+  if (reminder.offsetMinutes >= 1440) return `${reminder.offsetMinutes / 1440} день до занятия`;
+  if (reminder.offsetMinutes >= 60) return `${reminder.offsetMinutes / 60} ч до занятия`;
+  return `${reminder.offsetMinutes} мин до занятия`;
+}
+
+/** Mirrors the API's GET /plans/:id/progress — computed on demand, never stored. */
+export function planProgress(db, { periodStart, periodEnd, subjectId }) {
+  const inRange = (iso) => iso.slice(0, 10) >= periodStart && iso.slice(0, 10) <= periodEnd;
+  const currentStudents = db.students.filter((s) => inRange(s.createdAt)).length;
+  const completed = db.lessons.filter(
+    (l) => l.status === 'completed' && inRange(l.scheduledAt) && (subjectId ? l.subjectId === subjectId : true)
+  );
+  const currentRevenue = completed.reduce((sum, l) => sum + (l.priceCharged ?? 0), 0);
+  const { rating } = tutorRating(db);
+  return { currentStudents, currentRevenue, currentLessons: completed.length, currentRating: rating };
+}
+
 export function tutorRating(db) {
   const visible = db.reviews.filter((r) => !r.isHidden);
   if (visible.length === 0) return { rating: null, reviewCount: 0 };
@@ -106,7 +134,10 @@ export function enrichStudent(db, student) {
 }
 
 // ── mutations — each saves the dataset back to sessionStorage ───────────
-export async function createLesson(db, { studentId, scheduledAt, plannedDurationMin, subjectId }) {
+
+/** completedFields is optional — the unified lesson form can create a lesson
+ * that's already marked "проведено" in one step, matching Create Edit Lesson.dc.html. */
+export async function createLesson(db, { studentId, scheduledAt, plannedDurationMin, subjectId, completedFields }) {
   const student = db.students.find((s) => s.id === studentId);
   if (!student) throw new Error('Ученик не найден');
   const debt = studentDebtStatus(db, studentId);
@@ -116,13 +147,13 @@ export async function createLesson(db, { studentId, scheduledAt, plannedDuration
     studentId,
     scheduledAt,
     plannedDurationMin: plannedDurationMin ?? 60,
-    status: debt.isBlocked ? 'on_hold' : 'planned',
+    status: completedFields ? 'completed' : debt.isBlocked ? 'on_hold' : 'planned',
     priceCharged: effectivePrice(db, student),
-    actualDurationMin: null,
+    actualDurationMin: completedFields?.actualDurationMin ?? null,
     subjectId: subjectId ?? student.subjectId,
-    topic: null,
-    grade: null,
-    comment: null,
+    topic: completedFields?.topic ?? null,
+    grade: completedFields?.grade ?? null,
+    comment: completedFields?.comment || null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -146,17 +177,129 @@ export async function completeLesson(db, lessonId, { actualDurationMin, topic, g
   return lesson;
 }
 
+export async function cancelLesson(db, lessonId) {
+  const lesson = db.lessons.find((l) => l.id === lessonId);
+  if (!lesson) throw new Error('Занятие не найдено');
+  lesson.status = 'cancelled';
+  lesson.updatedAt = new Date().toISOString();
+  await saveDb(db);
+  return lesson;
+}
+
+export async function createStudent(db, { name, age, subjectId, contactTelegram, contactPhone }) {
+  const student = {
+    id: uid('stud'),
+    tutorId: db.tutor.id,
+    name,
+    age: age ?? null,
+    contactTelegram: contactTelegram || null,
+    contactPhone: contactPhone || null,
+    subjectId: subjectId ?? null,
+    customPrice: null,
+    status: 'active',
+    graduated: false,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  db.students.push(student);
+  await saveDb(db);
+  return student;
+}
+
+export async function toggleReviewHidden(db, reviewId) {
+  const review = db.reviews.find((r) => r.id === reviewId);
+  if (!review) throw new Error('Отзыв не найден');
+  review.isHidden = !review.isHidden;
+  await saveDb(db);
+  return review;
+}
+
+const OFFSET_PRESETS = {
+  '15 минут': 15,
+  '1 час': 60,
+  '2 часа': 120,
+  '1 день': 1440,
+};
+
+export async function addReminder(db, { target, presetLabel, days, hours, minutes }) {
+  const isCustom = presetLabel === 'Свой вариант';
+  const reminder = isCustom
+    ? { id: uid('rem'), tutorId: db.tutor.id, target, offsetMinutes: days * 1440 + hours * 60 + minutes, isEnabled: true, custom: true, createdAt: new Date().toISOString() }
+    : { id: uid('rem'), tutorId: db.tutor.id, target, offsetMinutes: OFFSET_PRESETS[presetLabel] ?? 60, isEnabled: true, createdAt: new Date().toISOString() };
+  db.reminderSettings.push(reminder);
+  await saveDb(db);
+  return reminder;
+}
+
+export async function deleteReminder(db, id) {
+  db.reminderSettings = db.reminderSettings.filter((r) => r.id !== id);
+  await saveDb(db);
+}
+
+export async function updateCustomReminder(db, id, { days, hours, minutes }) {
+  const reminder = db.reminderSettings.find((r) => r.id === id);
+  if (!reminder) throw new Error('Напоминание не найдено');
+  reminder.offsetMinutes = days * 1440 + hours * 60 + minutes;
+  await saveDb(db);
+  return reminder;
+}
+
 export async function updatePaymentPolicy(db, patch) {
   Object.assign(db.paymentPolicy, patch, { updatedAt: new Date().toISOString() });
   await saveDb(db);
   return db.paymentPolicy;
 }
 
-export async function checkoutSubscription(db, planKey) {
+export async function updatePaymentReminderSettings(db, patch) {
+  Object.assign(db.paymentReminderSettings, patch, { updatedAt: new Date().toISOString() });
+  await saveDb(db);
+  return db.paymentReminderSettings;
+}
+
+export function validatePromoCode(db, code) {
+  const promo = db.promoCodes?.find((p) => p.code === code.trim().toUpperCase() && p.isActive);
+  return promo ? { valid: true, discountPercent: Number(promo.discountPercent) } : { valid: false, discountPercent: 0 };
+}
+
+export async function checkoutSubscription(db, { planKey, method, discountPercent = 0, promoCode }) {
   const plan = db.subscriptionPlans.find((p) => p.key === planKey);
   if (!plan) throw new Error('План не найден');
+  const periodEnd = new Date();
+  plan.billingPeriod === 'year' ? periodEnd.setFullYear(periodEnd.getFullYear() + 1) : periodEnd.setMonth(periodEnd.getMonth() + 1);
+
   db.tutorSubscription.planId = plan.id;
   db.tutorSubscription.status = 'active';
+  db.tutorSubscription.cancelAtPeriodEnd = false;
+  db.tutorSubscription.currentPeriodStart = new Date().toISOString();
+  db.tutorSubscription.currentPeriodEnd = periodEnd.toISOString();
+  db.tutorSubscription.discountPercent = null;
+  db.tutorSubscription.discountUntil = null;
+  db.tutorSubscription.updatedAt = new Date().toISOString();
+
+  db.subscriptionPayments.push({
+    id: uid('subpay'),
+    tutorSubscriptionId: db.tutorSubscription.id,
+    amount: Math.round(plan.price * (1 - discountPercent / 100)),
+    method,
+    status: 'succeeded',
+    promoCode: promoCode || null,
+    paidAt: new Date().toISOString(),
+  });
+
+  await saveDb(db);
+  return db.tutorSubscription;
+}
+
+export async function cancelSubscription(db) {
+  db.tutorSubscription.cancelAtPeriodEnd = true;
+  db.tutorSubscription.updatedAt = new Date().toISOString();
+  await saveDb(db);
+  return db.tutorSubscription;
+}
+
+export async function acceptRetention(db) {
+  db.tutorSubscription.discountPercent = 30;
+  db.tutorSubscription.discountUntil = new Date(Date.now() + 90 * 86400000).toISOString();
   db.tutorSubscription.cancelAtPeriodEnd = false;
   db.tutorSubscription.updatedAt = new Date().toISOString();
   await saveDb(db);

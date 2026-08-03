@@ -42,6 +42,22 @@
   }
 }
 
+/* Manual theme override (Settings → Тема) always wins over the OS preference. */
+:root[data-theme='light'] {
+  --bg: #f3f2f2; --surface: #fdfcfb; --text: #201f1d; --muted: #6f6b67;
+  --divider: rgba(32, 31, 29, 0.16); --track: rgba(32, 31, 29, 0.1);
+  --accent: #b68235; --accent-tint: #fff3e4; --accent-text: #7d5411;
+  --success: #4f7a44; --success-tint: #e8f0e1;
+  --danger: #a8432f; --danger-tint: #fbe6e0; --danger-text: #7a2c1d; --danger-border: rgba(168, 67, 47, 0.25);
+}
+:root[data-theme='dark'] {
+  --bg: #18171a; --surface: #221f1c; --text: #f2efe9; --muted: #a39d94;
+  --divider: rgba(242, 239, 233, 0.16); --track: rgba(242, 239, 233, 0.1);
+  --accent: #e1ad66; --accent-tint: rgba(225, 173, 102, 0.16); --accent-text: #f0cf9a;
+  --success: #7fa571; --success-tint: rgba(127, 165, 113, 0.16);
+  --danger: #d47a63; --danger-tint: rgba(212, 122, 99, 0.16); --danger-text: #f0b9a8; --danger-border: rgba(212, 122, 99, 0.3);
+}
+
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body {
@@ -201,3 +217,125 @@ textarea.input { min-height: 70px; resize: vertical; }
   overflow: hidden;
 }
 .progress-fill { height: 100%; background: var(--accent); }
+
+/* ── icon button ─────────────────────────────────────────────────────── */
+.icon-btn {
+  width: 26px; height: 26px; border: 1px solid var(--divider); border-radius: 7px;
+  background: transparent; color: var(--text); cursor: pointer; font-size: 14px;
+  display: inline-flex; align-items: center; justify-content: center; padding: 0; flex: none;
+}
+
+/* ── segmented control (period / theme / payment-method tabs) ─────────── */
+.segmented {
+  display: inline-flex; border: 1px solid var(--divider); border-radius: 10px; overflow: hidden;
+}
+.segmented button {
+  font-family: var(--font-body); font-size: 12.5px; padding: 8px 14px; cursor: pointer;
+  background: transparent; color: var(--text); border: none; border-left: 1px solid var(--divider);
+}
+.segmented button:first-child { border-left: none; }
+.segmented button.active { background: var(--accent-tint); color: var(--accent-text); }
+
+/* ── stepper ─────────────────────────────────────────────────────────── */
+.stepper { display: flex; align-items: center; gap: 8px; }
+.stepper button {
+  width: 26px; height: 26px; border: 1px solid var(--divider); border-radius: 7px;
+  background: transparent; color: var(--text); cursor: pointer; font-size: 14px;
+}
+
+/* ── toggle switch ───────────────────────────────────────────────────── */
+.switch {
+  width: 44px; height: 25px; border-radius: 999px; border: 1px solid var(--divider);
+  background: transparent; padding: 2px; display: inline-flex; cursor: pointer; flex: none;
+  justify-content: flex-start;
+}
+.switch.on { border-color: var(--accent); background: var(--accent-tint); justify-content: flex-end; }
+.switch-knob { display: block; width: 19px; height: 19px; border-radius: 50%; background: var(--muted); }
+.switch.on .switch-knob { background: var(--accent); }
+
+/* ── dropdown menu (custom, used where native <select> isn't enough) ──── */
+.dropdown { position: relative; }
+.dropdown-panel {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 20;
+  border: 1px solid var(--divider); border-radius: 10px; background: var(--surface);
+  padding: 5px; display: flex; flex-direction: column; gap: 2px;
+}
+.dropdown-panel button {
+  display: block; width: 100%; box-sizing: border-box; text-align: left;
+  font-family: var(--font-body); font-size: 13px; padding: 8px 10px; border-radius: 8px;
+  border: none; cursor: pointer; background: transparent; color: var(--text);
+}
+.dropdown-panel button.selected { background: var(--accent-tint); color: var(--accent-text); }
+
+/* ── date picker ─────────────────────────────────────────────────────── */
+.datepicker { position: relative; }
+.datepicker-trigger {
+  width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between;
+  gap: 8px; font-family: var(--font-body); font-size: 13.5px; color: var(--text); background: transparent;
+  border: 1px solid var(--divider); border-radius: 10px; padding: 9px 12px; cursor: pointer;
+}
+.datepicker-panel {
+  position: absolute; top: calc(100% + 6px); left: 0; width: 240px; z-index: 20;
+  border: 1px solid var(--divider); border-radius: 11px; background: var(--surface); padding: 10px;
+}
+.datepicker-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; font-size: 11.5px; }
+
+/* ── calendar grid (shared by date picker + activity heatmap) ─────────── */
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 3px; }
+.calendar-weekdays { font-size: 10px; color: var(--muted); text-align: center; margin-bottom: 4px; }
+.calendar-cell {
+  text-align: center; font-variant-numeric: tabular-nums; font-size: 11px; padding: 5px 0;
+  border-radius: 6px; border: 1px solid transparent; background: transparent; color: var(--text);
+  cursor: pointer; font-family: var(--font-body);
+}
+.calendar-cell.out { opacity: 0.3; cursor: default; }
+.calendar-cell.today { border-color: var(--accent); }
+.calendar-cell.selected { background: var(--accent); color: #fff; }
+div.calendar-cell { cursor: default; } /* activity cells aren't clickable */
+
+/* ── activity heatmap ───────────────────────────────────────────────── */
+.activity-calendar { display: flex; flex-direction: column; gap: 8px; }
+.activity-legend-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+.activity-legend { display: flex; align-items: center; gap: 5px; justify-content: center; font-size: 10.5px; margin-top: 2px; }
+.legend-swatch { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.activity-b0 { background: var(--track); }
+.activity-b1 { background: color-mix(in srgb, var(--accent) 35%, var(--track)); }
+.activity-b2 { background: color-mix(in srgb, var(--accent) 65%, var(--track)); }
+.activity-b3 { background: var(--accent); color: #fff; }
+
+/* ── donut chart ────────────────────────────────────────────────────── */
+.donut-wrap { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.donut-legend { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
+.donut-legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
+
+/* ── radio card (subscription payment method) ──────────────────────── */
+.radio-card {
+  width: 100%; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between;
+  border: 1px solid var(--divider); border-radius: 10px; padding: 11px 13px; background: transparent; cursor: pointer;
+}
+.radio-card.selected { border-color: var(--accent); }
+.radio-dot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid var(--divider); display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.radio-card.selected .radio-dot { border-color: var(--accent); }
+.radio-dot-fill { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+
+/* ── modal ──────────────────────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(20, 18, 16, 0.45); display: flex; align-items: center;
+  justify-content: center; z-index: 100; padding: 16px;
+}
+.modal {
+  width: min(320px, 100%); background: var(--surface); border: 1px solid var(--divider); border-radius: 14px;
+  padding: 18px; display: flex; flex-direction: column; gap: 12px;
+}
+
+/* ── avatar placeholder ─────────────────────────────────────────────── */
+.avatar-box {
+  width: 108px; height: 108px; border-radius: 16px; border: 1px solid var(--divider);
+  background: var(--surface); display: flex; align-items: center; justify-content: center;
+  color: var(--muted); font-size: 12px; margin: 0 auto;
+}
+
+.badge-outline {
+  display: inline-flex; font-size: 10.5px; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--accent); border: 1px solid var(--accent); border-radius: 999px; padding: 4px 10px;
+}

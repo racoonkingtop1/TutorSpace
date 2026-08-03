@@ -1,24 +1,25 @@
-// Renders the demo banner + bottom tab bar shared by every authenticated
-// page. Each page just needs `<div id="shell-top"></div>` /
-// `<div id="shell-bottom"></div>` placeholders and a call to
-// `renderShell('today')` (or whichever tab is current).
+// Demo banner + bottom tab bar, shared by every authenticated screen.
+// Re-rendered on every navigation (cheap — it's a handful of DOM nodes) so
+// the active tab always matches the current hash route.
 
 const TABS = [
-  { key: 'today', href: 'index.html', label: 'Сегодня' },
-  { key: 'students', href: 'students.html', label: 'Ученики' },
-  { key: 'plan', href: 'plan.html', label: 'План' },
-  { key: 'settings', href: 'settings.html', label: 'Настройки' },
+  { key: 'today', href: '#/today', label: 'Сегодня', prefixes: ['/today'] },
+  { key: 'students', href: '#/students', label: 'Ученики', prefixes: ['/students', '/lessons-history'] },
+  { key: 'plan', href: '#/plan', label: 'План', prefixes: ['/plan'] },
+  { key: 'settings', href: '#/settings', label: 'Настройки', prefixes: ['/settings', '/subscription'] },
 ];
 
-export function renderShell(activeKey) {
+/** hasChrome=false renders bare content only (used by the public tutor card, "без навигации" in the original design). */
+export function renderShell(path, { hasChrome = true } = {}) {
   const top = document.getElementById('shell-top');
-  if (top) {
-    top.innerHTML = `<div class="demo-banner">Демо-режим · данные условны, изменения сохраняются только в этой вкладке браузера</div>`;
-  }
   const bottom = document.getElementById('shell-bottom');
-  if (bottom) {
-    bottom.innerHTML = `<nav class="bottom-nav">${TABS.map(
-      (t) => `<a href="${t.href}" class="${t.key === activeKey ? 'active' : ''}">${t.label}</a>`
-    ).join('')}</nav>`;
+  if (!hasChrome) {
+    top.innerHTML = '';
+    bottom.innerHTML = '';
+    return;
   }
+  top.innerHTML = `<div class="demo-banner">Демо-режим · данные условны, изменения сохраняются только в этой вкладке браузера</div>`;
+  bottom.innerHTML = `<nav class="bottom-nav">${TABS.map(
+    (t) => `<a href="${t.href}" class="${t.prefixes.some((p) => path.startsWith(p)) ? 'active' : ''}">${t.label}</a>`
+  ).join('')}</nav>`;
 }

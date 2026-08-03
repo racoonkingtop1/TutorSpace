@@ -367,6 +367,10 @@ const paymentReminderSettings = {
   maxReminders: 3,
   updatedAt: TODAY.toISOString(),
 };
+const promoCodes = [{ id: uuid('promo'), code: 'FIRST10', discountPercent: 10, isActive: true, expiresAt: null, createdAt: '2024-09-01T08:00:00Z' }];
+const subscriptionPayments = [
+  { id: uuid('subpay'), tutorSubscriptionId: tutorSubscription.id, amount: subscriptionPlans[1].price, method: 'card', status: 'succeeded', promoCode: null, paidAt: addDays(TODAY, -12).toISOString() },
+];
 
 // ── Assemble + write ──────────────────────────────────────────────────────
 const dataset = {
@@ -400,6 +404,8 @@ const dataset = {
   plans,
   subscriptionPlans,
   tutorSubscription,
+  subscriptionPayments,
+  promoCodes,
   reminderSettings,
   paymentPolicy,
   paymentReminderSettings,

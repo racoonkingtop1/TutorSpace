@@ -1,13 +1,12 @@
-import { getDb, enrichStudent, studentDebtStatus } from './data.js';
-import { renderShell } from './shell.js';
-import { qs, date, escapeHtml } from './format.js';
+import { getDb, enrichStudent, studentDebtStatus } from '../data.js';
+import { renderShell } from '../shell.js';
+import { money, date, escapeHtml } from '../format.js';
 
-renderShell('students');
-const content = document.getElementById('content');
-const id = qs('id');
-
-async function render() {
+export async function renderStudentProfile({ params }) {
+  renderShell('/students');
+  const content = document.getElementById('content');
   const db = await getDb();
+  const id = params.id;
   const student = db.students.find((s) => s.id === id);
   if (!student) {
     content.innerHTML = '<div class="error">Ученик не найден.</div>';
@@ -16,24 +15,19 @@ async function render() {
   const enriched = enrichStudent(db, student);
   const debt = studentDebtStatus(db, id);
 
-  const lessons = db.lessons
-    .filter((l) => l.studentId === id)
-    .sort((a, b) => b.scheduledAt.localeCompare(a.scheduledAt));
+  const lessons = db.lessons.filter((l) => l.studentId === id).sort((a, b) => b.scheduledAt.localeCompare(a.scheduledAt));
   const completedLessons = lessons.filter((l) => l.status === 'completed');
-
   const payments = db.payments.filter((p) => p.studentId === id).sort((a, b) => b.paidAt.localeCompare(a.paidAt));
 
   const grades = completedLessons.filter((l) => l.grade != null);
-  const subjAvg = grades.length
-    ? Math.round((grades.reduce((sum, l) => sum + l.grade, 0) / grades.length) * 10) / 10
-    : null;
+  const subjAvg = grades.length ? Math.round((grades.reduce((sum, l) => sum + l.grade, 0) / grades.length) * 10) / 10 : null;
 
   const balanceClass = debt.balance >= 0 ? 'balance-positive' : 'balance-negative';
-  const balanceLabel = `${debt.balance > 0 ? '+' : ''}${Math.round(debt.balance).toLocaleString('ru-RU')} ₽`;
+  const balanceLabel = money(debt.balance);
 
   content.innerHTML = `
     <div style="padding:18px 18px 40px;" class="stack">
-      <a class="back-link" href="students.html">← Ученики</a>
+      <a class="back-link" href="#/students">← Ученики</a>
       <div>
         <h2>${escapeHtml(student.name)}</h2>
         <div class="muted" style="font-size:12.5px;">${escapeHtml(enriched.subjectName ?? '')}</div>
@@ -45,7 +39,8 @@ async function render() {
         <div class="muted" style="font-size:11.5px;">${debt.unpaidCount ? `${debt.unpaidCount} занятие не оплачено` : 'Все занятия оплачены'}</div>
       </div>
 
-      <a class="btn btn-primary btn-block" href="lesson.html?studentId=${student.id}">Добавить занятие</a>
+      <a class="btn btn-primary btn-block" href="#/lesson/new?studentId=${student.id}">Добавить занятие</a>
+      <button type="button" class="btn btn-block" id="ai-analysis">✨ Анализ успеваемости</button>
 
       ${
         subjAvg != null
@@ -95,7 +90,7 @@ async function render() {
                   <div style="font-size:13px;">${date(p.paidAt)}</div>
                   <div class="muted" style="font-size:11px;">${escapeHtml(p.method ?? '')}</div>
                 </div>
-                <div class="tabular" style="color:var(--success);">+${Math.round(p.amount).toLocaleString('ru-RU')} ₽</div>
+                <div class="tabular" style="color:var(--success);">${money(p.amount)}</div>
               </div>`
                   )
                   .join('')
@@ -104,8 +99,8 @@ async function render() {
         </div>
       </section>
     </div>`;
-}
 
-render().catch((err) => {
-  content.innerHTML = `<div class="error">${escapeHtml(err.message)}</div>`;
-});
+  document.getElementById('ai-analysis').addEventListener('click', () => {
+    alert('AI-анализ успеваемости — недоступно в демо-версии.');
+  });
+}

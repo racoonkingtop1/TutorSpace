@@ -11,10 +11,6 @@ export function date(iso) {
   return new Date(iso).toLocaleDateString('ru-RU');
 }
 
-export function qs(name) {
-  return new URLSearchParams(location.search).get(name);
-}
-
 export function escapeHtml(str) {
   return String(str ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
