@@ -7,14 +7,17 @@ and its per-screen mockups) plus a hand-written DB schema doc; see
 [docs/db-schema-analysis.md](docs/db-schema-analysis.md) for how the two were
 reconciled.
 
-**Live demo:** https://racoonkingtop1.github.io/TutorSpace/ — runs entirely
-against a bundled 500-record dataset (no backend needed for the static
-build); see [docs/demo-mode.md](docs/demo-mode.md).
+**Live demo:** https://racoonkingtop1.github.io/TutorSpace/ — plain
+HTML/CSS/JS (no bundler, no build step) served straight from
+[static/](static/), running entirely against a bundled 500-record dataset.
+See [static/README.md](static/README.md) for how that build works and why
+it's a separate, hand-maintained copy rather than a build of `apps/web`.
 
 Related docs: [docs/data-map.md](docs/data-map.md) (every entity, field, and
 where it's used) · [docs/db-schema-analysis.md](docs/db-schema-analysis.md)
-(design vs. schema gap analysis) · [docs/demo-mode.md](docs/demo-mode.md)
-(how the static demo build works).
+(design vs. schema gap analysis) · [static/README.md](static/README.md) (the
+deployed static demo) · [docs/demo-mode.md](docs/demo-mode.md) (the React
+app's own, currently unpublished, demo mode — same idea, different codebase).
 
 ## Stack
 

@@ -1,8 +1,10 @@
 #!/usr/bin/env node
-// Generates the ~500-record demo dataset used by the GitHub Pages build
-// (apps/web/src/demo/dataset.json) and mirrored to db/demo-data.json for
-// reference. Deterministic (seeded PRNG) so re-running produces the same
-// data — re-run after changing the shapes in packages/shared/src/entities.ts.
+// Generates the ~500-record demo dataset. Written to three places:
+//   - static/data/dataset.json   — the actual GitHub Pages deployment reads this
+//   - apps/web/src/demo/dataset.json — the React app's own (currently unpublished) demo mode
+//   - db/demo-data.json          — reference copy, not read by any app code
+// Deterministic (seeded PRNG) so re-running produces the same data — re-run
+// after changing the shapes in packages/shared/src/entities.ts.
 //
 // Usage: node scripts/generate-demo-data.mjs
 
@@ -412,5 +414,10 @@ writeFileSync(webTarget, json);
 const dbTarget = join(ROOT, 'db/demo-data.json');
 writeFileSync(dbTarget, json);
 
+// Plain HTML/CSS/JS build actually deployed to GitHub Pages (see static/README.md).
+const staticTarget = join(ROOT, 'static/data/dataset.json');
+mkdirSync(dirname(staticTarget), { recursive: true });
+writeFileSync(staticTarget, json);
+
 console.log(`Generated ${dataset.counts.total} records:`, dataset.counts);
-console.log(`Written to:\n  ${webTarget}\n  ${dbTarget}`);
+console.log(`Written to:\n  ${webTarget}\n  ${dbTarget}\n  ${staticTarget}`);

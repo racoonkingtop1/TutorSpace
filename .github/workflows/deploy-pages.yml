@@ -1,8 +1,12 @@
 name: Deploy demo to GitHub Pages
 
+# Deploys static/ as-is — plain HTML/CSS/JS, no build step. See static/README.md
+# for why this replaced building apps/web (React/Vite) for Pages.
+
 on:
   push:
     branches: [main]
+    paths: ['static/**', '.github/workflows/deploy-pages.yml']
   workflow_dispatch:
 
 permissions:
@@ -15,30 +19,16 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm run build -w packages/shared
-      # apps/web builds in production mode (vite build), which loads
-      # apps/web/.env.production (VITE_DEMO_MODE=true) — see docs/demo-mode.md.
-      - run: npm run build -w apps/web
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: apps/web/dist
-
   deploy:
-    needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: static
       - id: deployment
         uses: actions/deploy-pages@v4

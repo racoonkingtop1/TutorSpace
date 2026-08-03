@@ -1,9 +1,15 @@
-# Demo mode (GitHub Pages build)
+# Demo mode (apps/web's own production build)
+
+> **Note:** this is *not* what's currently deployed to GitHub Pages — that's
+> [static/](../static/README.md), a plain HTML/CSS/JS rebuild, because a
+> bundled SPA build hit issues on Pages. This doc describes `apps/web`'s own
+> demo mode, which still works the same way for any other static host (or if
+> Pages is revisited later) but isn't live right now.
 
 GitHub Pages serves static files only — there is no server to run
 `apps/api` or Postgres on. To still ship something that looks like a real,
-used app at the Pages URL, the production web build runs entirely against a
-bundled dataset instead of the network.
+used app from a build of `apps/web`, its production build runs entirely
+against a bundled dataset instead of the network.
 
 ## How it's wired
 
